@@ -40,11 +40,20 @@
   --text-muted: #797182;
   --text-light: #A49CAE;
 
-  /* Sombras suaves y etéreas */
+  /* Sombras 3D y resplandores románticos */
   --shadow-sm: 0 2px 8px rgba(120, 80, 160, 0.05);
   --shadow-md: 0 8px 24px rgba(120, 80, 160, 0.08);
   --shadow-lg: 0 16px 36px rgba(120, 80, 160, 0.12);
-  --shadow-polaroid: 0 10px 25px rgba(40, 20, 60, 0.09);
+  --shadow-polaroid: 0 16px 38px rgba(90, 40, 130, 0.14), 0 4px 10px rgba(0, 0, 0, 0.04);
+  --shadow-glow-heart: 0 10px 30px rgba(255, 90, 121, 0.38), 0 0 20px rgba(255, 90, 121, 0.2);
+  --shadow-glow-lila: 0 12px 35px rgba(162, 119, 255, 0.35), 0 0 25px rgba(192, 132, 252, 0.22);
+  --shadow-3d-card: 0 20px 45px -12px rgba(107, 52, 168, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+
+  /* Degradados mágicos */
+  --grad-sunset: linear-gradient(135deg, #FF5A79 0%, #FF85A1 45%, #A277FF 100%);
+  --grad-lila-glow: linear-gradient(135deg, #A277FF 0%, #C084FC 50%, #FF85A1 100%);
+  --grad-heart-button: linear-gradient(135deg, #FF4B72 0%, #FF758C 100%);
+  --grad-card-glass: linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(254, 246, 255, 0.78) 100%);
 
   /* Tipografías */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -55,6 +64,7 @@
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
+  --radius-xl: 32px;
   --radius-full: 9999px;
 
   --nav-height: 64px;

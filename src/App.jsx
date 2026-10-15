@@ -5,6 +5,7 @@ import { FrogsProvider } from './context/FrogsContext';
 import Navbar from './components/Navbar';
 import FrogCelebrationModal from './components/FrogCelebrationModal';
 import CouponModal from './components/CouponModal';
+import FloatingBackground from './components/FloatingBackground';
 
 import Home from './pages/Home';
 import Plans from './pages/Plans';
@@ -52,6 +53,7 @@ export default function App() {
     <AuthProvider>
       <FrogsProvider>
         <BrowserRouter>
+          <FloatingBackground />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route
