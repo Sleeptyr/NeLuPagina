@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Plans from './pages/Plans';
 import Reviews from './pages/Reviews';
 import Agenda from './pages/Agenda';
+import Roulette from './pages/Roulette';
 import Login from './pages/Login';
 
 // Componente para proteger las rutas privadas
@@ -88,6 +89,14 @@ export default function App() {
               element={
                 <ProtectedLayout>
                   <Agenda />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/ruleta"
+              element={
+                <ProtectedLayout>
+                  <Roulette />
                 </ProtectedLayout>
               }
             />

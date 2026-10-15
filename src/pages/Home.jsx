@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { CONTENT } from '../config/content';
 import { PHOTO_SLOTS } from '../config/photos';
@@ -14,12 +15,12 @@ import LoveCounter from '../components/LoveCounter';
 const NO_PHRASES = [
   'No',
   '¿Segura? 👀',
-  '¡Ni lo sueñes, Porfiada! 😜',
-  '¡Casi me atrapás! 💨',
-  '¡El No está de adorno! ✨',
-  '¡Atrapame si podés! 🐸',
-  '¡Te amo demasiado para un No! 💜',
-  '¡No hay escapatoria, hermosa! 🥰'
+  '¡Ni lo sueñes! 😜',
+  '¡Casi! 💨',
+  '¡De adorno! ✨',
+  '¡Atrapame! 🐸',
+  '¡Te amo más! 💜',
+  '¡Imposible! 🥰'
 ];
 
 export default function Home() {
@@ -31,7 +32,7 @@ export default function Home() {
   // Filtramos las 8 ranitas asignadas a la sección de Inicio
   const homeFrogs = FROGS_CONFIG.filter((f) => f.section === 'home');
 
-  // Lógica de escape del botón "No" (Móvil y Escritorio) con frases juguetonas
+  // Lógica de escape del botón "No" asegurando que NUNCA se salga de pantalla
   const moveNoButton = (e) => {
     if (e) {
       e.preventDefault();
@@ -39,30 +40,56 @@ export default function Home() {
     }
 
     if (navigator.vibrate) {
-      try { navigator.vibrate(40); } catch (err) {}
+      try { navigator.vibrate(35); } catch (err) {}
     }
 
-    const btn = noBtnRef.current;
-    const btnWidth = btn ? btn.offsetWidth : 140;
-    const btnHeight = btn ? btn.offsetHeight : 50;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 360;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 640;
 
-    const padding = 20;
-    const minTop = 80;
-    const maxTop = window.innerHeight - btnHeight - padding;
-    const minLeft = padding;
-    const maxLeft = window.innerWidth - btnWidth - padding;
+    // Medidas del botón con margen de seguridad para rotación y padding
+    const btnEl = noBtnRef.current;
+    const btnWidth = btnEl ? Math.max(btnEl.getBoundingClientRect().width, 160) : 160;
+    const btnHeight = btnEl ? Math.max(btnEl.getBoundingClientRect().height, 52) : 52;
 
-    const randomTop = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
-    const randomLeft = Math.floor(Math.random() * (maxLeft - minLeft + 1)) + minLeft;
-    const randomRotate = (Math.random() * 16 - 8).toFixed(1);
+    // Márgenes seguros estrictos respecto a la ventana del navegador
+    const safeMarginX = 20;
+    const safeMarginTop = 85; // Debajo del navbar superior
+    const safeMarginBottom = 80; // Arriba del reproductor flotante y borde inferior
+
+    const maxLeft = Math.max(safeMarginX, viewportWidth - btnWidth - safeMarginX);
+    const maxTop = Math.max(safeMarginTop, viewportHeight - btnHeight - safeMarginBottom);
+
+    // Posición aleatoria dentro del área visible y segura
+    let randomLeft = Math.floor(Math.random() * (maxLeft - safeMarginX + 1)) + safeMarginX;
+    let randomTop = Math.floor(Math.random() * (maxTop - safeMarginTop + 1)) + safeMarginTop;
+
+    // Clamp estricto a prueba de balas
+    randomLeft = Math.min(Math.max(safeMarginX, randomLeft), maxLeft);
+    randomTop = Math.min(Math.max(safeMarginTop, randomTop), maxTop);
+
+    const randomRotate = (Math.random() * 10 - 5).toFixed(1);
 
     setNoPhraseIndex((prev) => (prev + 1) % NO_PHRASES.length);
     setNoPosition({
-      top: `${Math.max(minTop, Math.min(randomTop, maxTop))}px`,
-      left: `${Math.max(minLeft, Math.min(randomLeft, maxLeft))}px`,
+      top: `${randomTop}px`,
+      left: `${randomLeft}px`,
       transform: `rotate(${randomRotate}deg)`
     });
   };
+
+  // Re-calcular posición si cambia el tamaño de la ventana o se rota la pantalla del celular
+  useEffect(() => {
+    if (!noPosition) return;
+    const handleResize = () => {
+      moveNoButton();
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [noPosition]);
 
   const handleYes = () => {
     if (navigator.vibrate) {
@@ -134,22 +161,54 @@ export default function Home() {
               <span>{CONTENT.home.yesButton}</span>
             </button>
 
-            <button
-              ref={noBtnRef}
-              id="btn-no-love"
-              className={`btn-no ${noPosition ? 'running' : ''}`}
-              style={noPosition ? {
-                top: noPosition.top,
-                left: noPosition.left,
-                transform: noPosition.transform
-              } : {}}
-              onMouseEnter={moveNoButton}
-              onTouchStart={moveNoButton}
-              onPointerDown={moveNoButton}
-              onClick={moveNoButton}
-            >
-              {NO_PHRASES[noPhraseIndex]}
-            </button>
+            {noPosition ? (
+              <>
+                {/* Espaciador fantasma para mantener la simetría original */}
+                <div
+                  style={{
+                    width: '140px',
+                    height: '50px',
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    display: 'inline-block'
+                  }}
+                  aria-hidden="true"
+                />
+                {createPortal(
+                  <button
+                    ref={noBtnRef}
+                    id="btn-no-love"
+                    className="btn-no running"
+                    style={{
+                      position: 'fixed',
+                      top: noPosition.top,
+                      left: noPosition.left,
+                      transform: noPosition.transform,
+                      zIndex: 99999
+                    }}
+                    onMouseEnter={moveNoButton}
+                    onTouchStart={moveNoButton}
+                    onPointerDown={moveNoButton}
+                    onClick={moveNoButton}
+                  >
+                    {NO_PHRASES[noPhraseIndex]}
+                  </button>,
+                  document.body
+                )}
+              </>
+            ) : (
+              <button
+                ref={noBtnRef}
+                id="btn-no-love"
+                className="btn-no"
+                onMouseEnter={moveNoButton}
+                onTouchStart={moveNoButton}
+                onPointerDown={moveNoButton}
+                onClick={moveNoButton}
+              >
+                {NO_PHRASES[noPhraseIndex]}
+              </button>
+            )}
           </div>
         </TiltCard>
       ) : (

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFrogs } from '../context/FrogsContext';
-import { Heart, MapPin, Utensils, Target, LogOut } from 'lucide-react';
+import { Heart, MapPin, Utensils, Target, Dices, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { profile, logout, isNerea, switchIdentity } = useAuth();
@@ -39,6 +39,12 @@ export default function Navbar() {
             <NavLink to="/agenda" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               <Target size={15} />
               <span>Agenda</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/ruleta" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <Dices size={15} />
+              <span>Ruleta</span>
             </NavLink>
           </li>
         </ul>
