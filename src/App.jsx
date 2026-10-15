@@ -6,10 +6,12 @@ import Navbar from './components/Navbar';
 import FrogCelebrationModal from './components/FrogCelebrationModal';
 import CouponModal from './components/CouponModal';
 import FloatingBackground from './components/FloatingBackground';
+import SpotifyPlayer from './components/SpotifyPlayer';
 
 import Home from './pages/Home';
 import Plans from './pages/Plans';
 import Reviews from './pages/Reviews';
+import Agenda from './pages/Agenda';
 import Login from './pages/Login';
 
 // Componente para proteger las rutas privadas
@@ -44,6 +46,7 @@ function ProtectedLayout({ children }) {
       </main>
       <FrogCelebrationModal />
       <CouponModal />
+      <SpotifyPlayer />
     </div>
   );
 }
@@ -77,6 +80,14 @@ export default function App() {
               element={
                 <ProtectedLayout>
                   <Reviews />
+                </ProtectedLayout>
+              }
+            />
+            <Route
+              path="/agenda"
+              element={
+                <ProtectedLayout>
+                  <Agenda />
                 </ProtectedLayout>
               }
             />

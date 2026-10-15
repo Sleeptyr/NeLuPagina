@@ -9,6 +9,7 @@ import SignedImage from '../components/SignedImage';
 import { Heart, Sparkles, ArrowRight, Stars } from 'lucide-react';
 
 import TiltCard from '../components/TiltCard';
+import LoveCounter from '../components/LoveCounter';
 
 const NO_PHRASES = [
   'No',
@@ -212,6 +213,11 @@ export default function Home() {
                 </div>
               </div>
             </TiltCard>
+          </div>
+
+          {/* Contador de Amor en vivo desde el 18 de Junio de 2024 */}
+          <div style={{ margin: '2.5rem auto 1.5rem auto', maxWidth: '620px', width: '100%' }}>
+            <LoveCounter />
           </div>
 
           <div style={{ marginTop: '2.5rem' }}>
