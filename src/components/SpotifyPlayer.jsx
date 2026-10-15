@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Music, Disc3, X, ChevronUp, ChevronDown, Heart, Sparkles, ExternalLink } from 'lucide-react';
 
-// Canción romántica por defecto (editable por el usuario)
-const DEFAULT_SPOTIFY_URI = 'https://open.spotify.com/embed/track/0ct6r3EGTcDP8NavRVrr4l'; // Until I Found You - Stephen Sanchez
+// Canción romántica de Lucas y Nerea
+const DEFAULT_SPOTIFY_URI = 'https://open.spotify.com/embed/track/5zpZUFF7YyPG90nkR88RYd';
 
 export default function SpotifyPlayer() {
   const [isOpen, setIsOpen] = useState(false);
   const [spotifyUrl, setSpotifyUrl] = useState(() => {
-    return localStorage.getItem('pagina_amor_spotify_track') || DEFAULT_SPOTIFY_URI;
+    // Si la guardada era la de prueba anterior, actualizamos a la canción de ellos
+    const saved = localStorage.getItem('pagina_amor_spotify_track');
+    if (!saved || saved.includes('0ct6r3EGTcDP8NavRVrr4l')) {
+      localStorage.setItem('pagina_amor_spotify_track', DEFAULT_SPOTIFY_URI);
+      return DEFAULT_SPOTIFY_URI;
+    }
+    return saved;
   });
   const [customInput, setCustomInput] = useState('');
   const [isEditing, setIsEditing] = useState(false);
 
-  // Convertir URL de Spotify común a Embed si es necesario
+  // Convertir URL de Spotify común (incluso con prefijos intl-es) a Embed
   const formatEmbedUrl = (url) => {
     if (!url) return DEFAULT_SPOTIFY_URI;
     if (url.includes('/embed/')) return url;
     
-    // Si viene como https://open.spotify.com/track/ID o /playlist/ID
-    const match = url.match(/open\.spotify\.com\/(track|playlist|album)\/([a-zA-Z0-9]+)/);
+    const match = url.match(/open\.spotify\.com\/(?:intl-[a-zA-Z-]+\/)?(track|playlist|album)\/([a-zA-Z0-9]+)/);
     if (match) {
       return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
     }
