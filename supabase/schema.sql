@@ -58,7 +58,46 @@ create table if not exists public.frogs_found (
 );
 
 -- ==============================================================================
--- 5. ROW LEVEL SECURITY (RLS) ESTRICTO
+-- 5. TABLAS ADICIONALES: METAS, NOTAS Y RULETA (AGENDA & RULETA EN LA NUBE)
+-- ==============================================================================
+
+-- 5.1 METAS COMPARTIDAS (AGENDA)
+create table if not exists public.goals (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  category text not null default 'Viajes',
+  target_date date,
+  progress integer not null default 0 check (progress between 0 and 100),
+  completed boolean not null default false,
+  created_by uuid references public.profiles(id) on delete set null,
+  author_name text not null default 'Ambos',
+  created_at timestamptz default timezone('utc'::text, now()) not null
+);
+
+-- 5.2 NOTAS Y POST-ITS COMPARTIDOS (AGENDA)
+create table if not exists public.notes (
+  id uuid primary key default gen_random_uuid(),
+  text text not null,
+  color text not null default '#F4EBFC',
+  pin_color text not null default '#9B5DE5',
+  created_by uuid references public.profiles(id) on delete set null,
+  author_name text not null default 'Ambos',
+  created_at timestamptz default timezone('utc'::text, now()) not null
+);
+
+-- 5.3 RULETA DE CITAS (IDEAS MODIFICABLES POR AMBOS)
+create table if not exists public.roulette_ideas (
+  id uuid primary key default gen_random_uuid(),
+  text text not null,
+  category text not null default 'Romántico',
+  author text not null default 'Ambos',
+  active boolean not null default true,
+  created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz default timezone('utc'::text, now()) not null
+);
+
+-- ==============================================================================
+-- 6. ROW LEVEL SECURITY (RLS) ESTRICTO
 -- Solo los usuarios existentes en la tabla profiles (Lucas y Nerea) tienen acceso.
 -- ==============================================================================
 
@@ -66,6 +105,9 @@ alter table public.profiles enable row level security;
 alter table public.wishes enable row level security;
 alter table public.reviews enable row level security;
 alter table public.frogs_found enable row level security;
+alter table public.goals enable row level security;
+alter table public.notes enable row level security;
+alter table public.roulette_ideas enable row level security;
 
 -- Función de ayuda: verifica si el usuario autenticado es uno de los dos autorizados
 create or replace function public.is_authorized_user()
@@ -156,8 +198,77 @@ create policy "Registrar rana encontrada"
   on public.frogs_found for insert
   with check (public.is_authorized_user() and user_id = auth.uid());
 
+-- ------------------------------------------------------------------------------
+-- Políticas para GOALS (Metas)
+-- ------------------------------------------------------------------------------
+drop policy if exists "Lectura compartida de metas" on public.goals;
+create policy "Lectura compartida de metas"
+  on public.goals for select
+  using (public.is_authorized_user());
+
+drop policy if exists "Crear metas autorizadas" on public.goals;
+create policy "Crear metas autorizadas"
+  on public.goals for insert
+  with check (public.is_authorized_user());
+
+drop policy if exists "Editar metas autorizadas" on public.goals;
+create policy "Editar metas autorizadas"
+  on public.goals for update
+  using (public.is_authorized_user());
+
+drop policy if exists "Eliminar metas autorizadas" on public.goals;
+create policy "Eliminar metas autorizadas"
+  on public.goals for delete
+  using (public.is_authorized_user());
+
+-- ------------------------------------------------------------------------------
+-- Políticas para NOTES (Notas)
+-- ------------------------------------------------------------------------------
+drop policy if exists "Lectura compartida de notas" on public.notes;
+create policy "Lectura compartida de notas"
+  on public.notes for select
+  using (public.is_authorized_user());
+
+drop policy if exists "Crear notas autorizadas" on public.notes;
+create policy "Crear notas autorizadas"
+  on public.notes for insert
+  with check (public.is_authorized_user());
+
+drop policy if exists "Editar notas autorizadas" on public.notes;
+create policy "Editar notas autorizadas"
+  on public.notes for update
+  using (public.is_authorized_user());
+
+drop policy if exists "Eliminar notas autorizadas" on public.notes;
+create policy "Eliminar notas autorizadas"
+  on public.notes for delete
+  using (public.is_authorized_user());
+
+-- ------------------------------------------------------------------------------
+-- Políticas para ROULETTE_IDEAS (Ruleta)
+-- ------------------------------------------------------------------------------
+drop policy if exists "Lectura compartida de ruleta" on public.roulette_ideas;
+create policy "Lectura compartida de ruleta"
+  on public.roulette_ideas for select
+  using (public.is_authorized_user());
+
+drop policy if exists "Crear ideas de ruleta" on public.roulette_ideas;
+create policy "Crear ideas de ruleta"
+  on public.roulette_ideas for insert
+  with check (public.is_authorized_user());
+
+drop policy if exists "Editar ideas de ruleta" on public.roulette_ideas;
+create policy "Editar ideas de ruleta"
+  on public.roulette_ideas for update
+  using (public.is_authorized_user());
+
+drop policy if exists "Eliminar ideas de ruleta" on public.roulette_ideas;
+create policy "Eliminar ideas de ruleta"
+  on public.roulette_ideas for delete
+  using (public.is_authorized_user());
+
 -- ==============================================================================
--- 6. STORAGE: BUCKET PRIVADO PARA FOTOS
+-- 7. STORAGE: BUCKET PRIVADO PARA FOTOS
 -- ==============================================================================
 
 -- Crear el bucket privado 'couple-photos'
@@ -193,7 +304,7 @@ create policy "Eliminar fotos autorizadas"
   using (bucket_id = 'couple-photos' and public.is_authorized_user());
 
 -- ==============================================================================
--- 7. SEED TEMPLATE (Reemplazar con los UUIDs reales al crear las cuentas en Auth)
+-- 8. SEED TEMPLATE (Reemplazar con los UUIDs reales al crear las cuentas en Auth)
 -- ==============================================================================
 /*
 -- Ejemplo de inserción una vez creados los dos usuarios en Authentication -> Users:

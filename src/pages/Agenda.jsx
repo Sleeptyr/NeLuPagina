@@ -93,7 +93,57 @@ export default function Agenda() {
   const [noteText, setNoteText] = useState('');
   const [noteColor, setNoteColor] = useState('#F4EBFC');
 
-  // Guardar en localStorage
+  // Cargar metas desde Supabase Cloud
+  const fetchGoals = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setGoals(data);
+        localStorage.setItem('pagina_amor_goals', JSON.stringify(data));
+      }
+    } catch (e) {}
+  };
+
+  // Cargar notas desde Supabase Cloud
+  const fetchNotes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setNotes(data);
+        localStorage.setItem('pagina_amor_notes', JSON.stringify(data));
+      }
+    } catch (e) {}
+  };
+
+  // Sincronización en tiempo real con Supabase
+  useEffect(() => {
+    fetchGoals();
+    fetchNotes();
+
+    const channel = supabase
+      .channel('agenda-realtime-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, () => {
+        fetchGoals();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notes' }, () => {
+        fetchNotes();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Guardar en cache local ante cualquier cambio
   useEffect(() => {
     localStorage.setItem('pagina_amor_goals', JSON.stringify(goals));
   }, [goals]);
@@ -104,18 +154,20 @@ export default function Agenda() {
 
   const currentAuthor = profile?.display_name || (isNerea ? 'Nerea' : 'Lucas');
 
-  const handleAddGoal = (e) => {
+  const handleAddGoal = async (e) => {
     e.preventDefault();
     if (!goalTitle.trim()) return;
 
+    const tempId = `goal-${Date.now()}`;
     const newGoal = {
-      id: `goal-${Date.now()}`,
+      id: tempId,
       title: goalTitle.trim(),
       target_date: goalDate || null,
       progress: Number(goalProgress),
       completed: Number(goalProgress) >= 100,
       author_name: currentAuthor,
-      category: goalCategory
+      category: goalCategory,
+      created_at: new Date().toISOString()
     };
 
     setGoals((prev) => [newGoal, ...prev]);
@@ -123,14 +175,35 @@ export default function Agenda() {
     setGoalDate('');
     setGoalProgress(25);
     setIsGoalModalOpen(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .insert([
+          {
+            title: newGoal.title,
+            target_date: newGoal.target_date,
+            progress: newGoal.progress,
+            completed: newGoal.completed,
+            author_name: newGoal.author_name,
+            category: newGoal.category
+          }
+        ])
+        .select();
+
+      if (!error && data && data[0]) {
+        setGoals((prev) => prev.map((g) => (g.id === tempId ? data[0] : g)));
+      }
+    } catch (err) {}
   };
 
-  const handleAddNote = (e) => {
+  const handleAddNote = async (e) => {
     e.preventDefault();
     if (!noteText.trim()) return;
 
+    const tempId = `note-${Date.now()}`;
     const newNote = {
-      id: `note-${Date.now()}`,
+      id: tempId,
       text: noteText.trim(),
       color: noteColor,
       pin_color: noteColor === '#F4EBFC' ? '#9B5DE5' : '#FF5A79',
@@ -141,28 +214,66 @@ export default function Agenda() {
     setNotes((prev) => [newNote, ...prev]);
     setNoteText('');
     setIsNoteModalOpen(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .insert([
+          {
+            text: newNote.text,
+            color: newNote.color,
+            pin_color: newNote.pin_color,
+            author_name: newNote.author_name
+          }
+        ])
+        .select();
+
+      if (!error && data && data[0]) {
+        setNotes((prev) => prev.map((n) => (n.id === tempId ? data[0] : n)));
+      }
+    } catch (err) {}
   };
 
-  const updateGoalProgress = (id, delta) => {
+  const updateGoalProgress = async (id, delta) => {
+    let updated = null;
     setGoals((prev) =>
       prev.map((g) => {
         if (g.id !== id) return g;
         const newProg = Math.max(0, Math.min(100, g.progress + delta));
-        return {
+        updated = {
           ...g,
           progress: newProg,
           completed: newProg >= 100
         };
+        return updated;
       })
     );
+
+    if (updated) {
+      try {
+        await supabase
+          .from('goals')
+          .update({
+            progress: updated.progress,
+            completed: updated.completed
+          })
+          .eq('id', id);
+      } catch (err) {}
+    }
   };
 
-  const deleteGoal = (id) => {
+  const deleteGoal = async (id) => {
     setGoals((prev) => prev.filter((g) => g.id !== id));
+    try {
+      await supabase.from('goals').delete().eq('id', id);
+    } catch (err) {}
   };
 
-  const deleteNote = (id) => {
+  const deleteNote = async (id) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await supabase.from('notes').delete().eq('id', id);
+    } catch (err) {}
   };
 
   return (

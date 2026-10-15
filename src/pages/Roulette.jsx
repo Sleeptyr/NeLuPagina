@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
 import { triggerHeartExplosion } from '../components/HeartExplosion';
 import TiltCard from '../components/TiltCard';
 import {
@@ -66,10 +67,41 @@ export default function Roulette() {
     return DEFAULT_IDEAS;
   });
 
-  // Guardar en localStorage
+  // Guardar en cache local
   useEffect(() => {
     localStorage.setItem('pagina_amor_roulette_ideas_v2', JSON.stringify(ideas));
   }, [ideas]);
+
+  // Cargar ideas desde Supabase Cloud
+  const fetchIdeas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('roulette_ideas')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setIdeas(data);
+        localStorage.setItem('pagina_amor_roulette_ideas_v2', JSON.stringify(data));
+      }
+    } catch (e) {}
+  };
+
+  // Sincronización en tiempo real con Supabase
+  useEffect(() => {
+    fetchIdeas();
+
+    const channel = supabase
+      .channel('roulette-realtime-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'roulette_ideas' }, () => {
+        fetchIdeas();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Filtro de categoría en la lista
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -275,22 +307,42 @@ export default function Roulette() {
     }, 4500);
   };
 
-  // Agregar nueva idea
-  const handleAddSubmit = (e) => {
+  // Agregar nueva idea a la nube
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!newText.trim()) return;
 
+    const tempId = `idea-${Date.now()}`;
     const newIdea = {
-      id: `idea-${Date.now()}`,
+      id: tempId,
       text: newText.trim(),
       category: newCategory,
       author: newAuthor,
-      active: true
+      active: true,
+      created_at: new Date().toISOString()
     };
 
     setIdeas((prev) => [newIdea, ...prev]);
     setNewText('');
     setIsAddModalOpen(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('roulette_ideas')
+        .insert([
+          {
+            text: newIdea.text,
+            category: newIdea.category,
+            author: newIdea.author,
+            active: true
+          }
+        ])
+        .select();
+
+      if (!error && data && data[0]) {
+        setIdeas((prev) => prev.map((item) => (item.id === tempId ? data[0] : item)));
+      }
+    } catch (err) {}
   };
 
   // Iniciar edición de una idea
@@ -300,8 +352,8 @@ export default function Roulette() {
     setEditCategory(idea.category);
   };
 
-  // Guardar edición
-  const handleSaveEdit = (id) => {
+  // Guardar edición en la nube
+  const handleSaveEdit = async (id) => {
     if (!editText.trim()) return;
     setIdeas((prev) =>
       prev.map((idea) =>
@@ -309,24 +361,48 @@ export default function Roulette() {
       )
     );
     setEditingId(null);
+
+    try {
+      await supabase
+        .from('roulette_ideas')
+        .update({
+          text: editText.trim(),
+          category: editCategory
+        })
+        .eq('id', id);
+    } catch (err) {}
   };
 
-  // Alternar activo / inactivo
-  const handleToggleActive = (id) => {
+  // Alternar activo / inactivo en la nube
+  const handleToggleActive = async (id) => {
+    const current = ideas.find((i) => i.id === id);
+    const newActive = current ? !current.active : true;
+
     setIdeas((prev) =>
       prev.map((idea) =>
-        idea.id === id ? { ...idea, active: !idea.active } : idea
+        idea.id === id ? { ...idea, active: newActive } : idea
       )
     );
+
+    try {
+      await supabase
+        .from('roulette_ideas')
+        .update({ active: newActive })
+        .eq('id', id);
+    } catch (err) {}
   };
 
-  // Eliminar idea
-  const handleDelete = (id) => {
+  // Eliminar idea de la nube
+  const handleDelete = async (id) => {
     if (ideas.length <= 2) {
       alert('La ruleta necesita tener al menos 2 ideas cargadas.');
       return;
     }
     setIdeas((prev) => prev.filter((idea) => idea.id !== id));
+
+    try {
+      await supabase.from('roulette_ideas').delete().eq('id', id);
+    } catch (err) {}
   };
 
   // Restablecer ideas por defecto
