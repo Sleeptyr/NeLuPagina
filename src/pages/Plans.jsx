@@ -45,43 +45,12 @@ export default function Plans() {
         .order('created_at', { ascending: false });
 
       if (error || !data) {
-        // Fallback local si la base de datos aún no tiene registros o está en demo
+        // Fallback local si la base de datos aún no tiene registros
         const local = localStorage.getItem('pagina_amor_plans_demo');
         if (local) {
           setPlans(JSON.parse(local));
         } else {
-          // Planes iniciales de ejemplo
-          const initialMock = [
-            {
-              id: 'plan-demo-1',
-              title: 'Viaje a las sierras a ver las estrellas',
-              kind: 'lugar',
-              notes: 'Llevar abrigo, mates y una manta grande.',
-              done: false,
-              created_at: new Date().toISOString(),
-              profiles: { display_name: 'Lucas', nickname: null, color: '#1E1B18' }
-            },
-            {
-              id: 'plan-demo-2',
-              title: 'Cena de sushi y maratón de películas',
-              kind: 'cosa',
-              notes: 'Elegir las películas juntos con helado de postre.',
-              done: true,
-              created_at: new Date().toISOString(),
-              profiles: { display_name: 'Nerea', nickname: 'Porfiada', color: '#9B5DE5' }
-            },
-            {
-              id: 'plan-demo-3',
-              title: 'Tazas personalizadas para nuestros desayunos',
-              kind: 'compra',
-              notes: 'Una lila y una negra con ranitas estampadas.',
-              done: false,
-              created_at: new Date().toISOString(),
-              profiles: { display_name: 'Lucas', nickname: null, color: '#1E1B18' }
-            }
-          ];
-          setPlans(initialMock);
-          localStorage.setItem('pagina_amor_plans_demo', JSON.stringify(initialMock));
+          setPlans([]);
         }
       } else {
         setPlans(data);

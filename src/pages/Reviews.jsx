@@ -52,42 +52,12 @@ export default function Reviews() {
         .order('visited_at', { ascending: false });
 
       if (error || !data) {
-        // Fallback demo local
+        // Fallback local si la base de datos aún no tiene registros
         const local = localStorage.getItem('pagina_amor_reviews_demo');
         if (local) {
           setReviews(JSON.parse(local));
         } else {
-          // Datos iniciales cariñosos de muestra con fotos reales de sus salidas
-          const initialMock = [
-            {
-              id: 'rev-demo-1',
-              place_name: 'Café Edison',
-              category: 'merienda',
-              rating: 5,
-              comment: 'El café de especialidad y la pastelería estuvieron increíbles. La compañía, insuperable.',
-              items_ordered: 'Capuchino, latte frío y medialunas rellenas.',
-              priceApprox: 9500,
-              would_return: true,
-              visited_at: '2026-09-20',
-              author: '00000000-0000-0000-0000-000000000002',
-              profiles: { display_name: 'Lucas', nickname: null, color: '#1E1B18' }
-            },
-            {
-              id: 'rev-demo-2',
-              place_name: 'Pato Gula',
-              category: 'almuerzo-cena',
-              rating: 5,
-              comment: '¡Las hamburguesas más ricas de todas! Nos reímos un montón esa noche.',
-              items_ordered: 'Hamburguesas completas con papas cheddar y gaseosa.',
-              priceApprox: 18000,
-              would_return: true,
-              visited_at: '2026-08-14',
-              author: '00000000-0000-0000-0000-000000000001',
-              profiles: { display_name: 'Nerea', nickname: 'Porfiada', color: '#9B5DE5' }
-            }
-          ];
-          setReviews(initialMock);
-          localStorage.setItem('pagina_amor_reviews_demo', JSON.stringify(initialMock));
+          setReviews([]);
         }
       } else {
         setReviews(data);

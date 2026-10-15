@@ -17,55 +17,9 @@ import {
   PenTool
 } from 'lucide-react';
 
-// Semillas iniciales tiernas para que la agenda no esté vacía al abrir
-const INITIAL_GOALS = [
-  {
-    id: 'goal-1',
-    title: 'Viaje juntos a la Patagonia ❄️🏔️',
-    target_date: '2025-12-20',
-    progress: 40,
-    completed: false,
-    author_name: 'Lucas',
-    category: 'Viajes'
-  },
-  {
-    id: 'goal-2',
-    title: 'Cocinar comida casera juntos todos los domingos 🍝',
-    target_date: '2025-06-18',
-    progress: 75,
-    completed: false,
-    author_name: 'Nerea',
-    category: 'Cotidiano'
-  },
-  {
-    id: 'goal-3',
-    title: 'Armar nuestro álbum físico de fotos de estos 2 años 📸',
-    target_date: '2025-08-15',
-    progress: 20,
-    completed: false,
-    author_name: 'Lucas',
-    category: 'Recuerdos'
-  }
-];
-
-const INITIAL_NOTES = [
-  {
-    id: 'note-1',
-    text: 'Acordate que sos lo más lindo que me pasó en la vida, Porfiada. Te amo un montón 💜',
-    color: '#F4EBFC',
-    pin_color: '#9B5DE5',
-    author_name: 'Lucas',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: 'note-2',
-    text: '¡Sos mi persona favorita en el universo entero! Gracias por hacerme tan feliz 🥰',
-    color: '#FFE5EC',
-    pin_color: '#FF5A79',
-    author_name: 'Nerea',
-    created_at: new Date(Date.now() - 86400000).toISOString()
-  }
-];
+// Inicializamos vacíos para empezar el registro en 0
+const INITIAL_GOALS = [];
+const INITIAL_NOTES = [];
 
 export default function Agenda() {
   const { profile, isNerea } = useAuth();
@@ -317,84 +271,107 @@ export default function Agenda() {
             </button>
           </div>
 
-          <div className="goals-grid">
-            {goals.map((goal) => {
-              const isNereaAuthor = goal.author_name.toLowerCase().includes('nerea');
-              return (
-                <TiltCard maxTilt={6} key={goal.id} className="goal-card">
-                  <div className="goal-card-header">
-                    <span className="goal-category-badge">{goal.category}</span>
-                    <span className={`user-badge ${isNereaAuthor ? 'nerea' : 'lucas'}`}>
-                      {isNereaAuthor ? '💜 Nerea' : '🖤 Lucas'}
-                    </span>
-                  </div>
-
-                  <h3 className={`goal-title ${goal.completed ? 'completed' : ''}`}>
-                    {goal.title}
-                  </h3>
-
-                  {goal.target_date && (
-                    <div className="goal-date-tag">
-                      <Calendar size={13} />
-                      <span>Meta para: {new Date(goal.target_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          {goals.length === 0 ? (
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: 'var(--radius-md)',
+              padding: '3rem 1.5rem',
+              textAlign: 'center',
+              border: '1px dashed var(--color-crema-border)'
+            }}>
+              <span style={{ fontSize: '2.5rem' }}>🎯✨</span>
+              <p style={{ marginTop: '0.75rem', color: 'var(--text-body)', fontSize: '1.05rem' }}>
+                Todavía no tenemos metas anotadas. ¡Definamos nuestro primer sueño juntos!
+              </p>
+              <button
+                onClick={() => setIsGoalModalOpen(true)}
+                className="continue-site-btn"
+                style={{ marginTop: '1.25rem', padding: '0.65rem 1.25rem' }}
+              >
+                <Plus size={16} />
+                <span>Crear nuestra primera meta</span>
+              </button>
+            </div>
+          ) : (
+            <div className="goals-grid">
+              {goals.map((goal) => {
+                const isNereaAuthor = goal.author_name.toLowerCase().includes('nerea');
+                return (
+                  <TiltCard maxTilt={6} key={goal.id} className="goal-card">
+                    <div className="goal-card-header">
+                      <span className="goal-category-badge">{goal.category}</span>
+                      <span className={`user-badge ${isNereaAuthor ? 'nerea' : 'lucas'}`}>
+                        {isNereaAuthor ? '💜 Nerea' : '🖤 Lucas'}
+                      </span>
                     </div>
-                  )}
 
-                  {/* Barra de progreso interactiva */}
-                  <div className="goal-progress-section">
-                    <div className="progress-labels">
-                      <span>Progreso</span>
-                      <strong>{goal.progress}% {goal.completed ? '🎉 ¡Cumplida!' : ''}</strong>
-                    </div>
-                    <div className="progress-bar-bg">
-                      <div
-                        className="progress-bar-fill"
-                        style={{
-                          width: `${goal.progress}%`,
-                          background: goal.completed ? 'var(--color-mint-frog)' : 'var(--grad-sunset)'
-                        }}
-                      />
-                    </div>
-                  </div>
+                    <h3 className={`goal-title ${goal.completed ? 'completed' : ''}`}>
+                      {goal.title}
+                    </h3>
 
-                  {/* Controles de avance rápido */}
-                  <div className="goal-controls">
-                    <button
-                      type="button"
-                      onClick={() => updateGoalProgress(goal.id, -25)}
-                      className="goal-step-btn"
-                      title="-25%"
-                    >
-                      -25%
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateGoalProgress(goal.id, 25)}
-                      className="goal-step-btn"
-                      title="+25%"
-                    >
-                      +25%
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateGoalProgress(goal.id, goal.completed ? -100 : 100)}
-                      className={`goal-step-btn ${goal.completed ? 'done-btn' : ''}`}
-                    >
-                      {goal.completed ? 'Reabrir' : '¡Completada! 🥳'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteGoal(goal.id)}
-                      className="goal-delete-btn"
-                      title="Eliminar meta"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </div>
-                </TiltCard>
-              );
-            })}
-          </div>
+                    {goal.target_date && (
+                      <div className="goal-date-tag">
+                        <Calendar size={13} />
+                        <span>Meta para: {new Date(goal.target_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                      </div>
+                    )}
+
+                    {/* Barra de progreso interactiva */}
+                    <div className="goal-progress-section">
+                      <div className="progress-labels">
+                        <span>Progreso</span>
+                        <strong>{goal.progress}% {goal.completed ? '🎉 ¡Cumplida!' : ''}</strong>
+                      </div>
+                      <div className="progress-bar-bg">
+                        <div
+                          className="progress-bar-fill"
+                          style={{
+                            width: `${goal.progress}%`,
+                            background: goal.completed ? 'var(--color-mint-frog)' : 'var(--grad-sunset)'
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Controles de avance rápido */}
+                    <div className="goal-controls">
+                      <button
+                        type="button"
+                        onClick={() => updateGoalProgress(goal.id, -25)}
+                        className="goal-step-btn"
+                        title="-25%"
+                      >
+                        -25%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateGoalProgress(goal.id, 25)}
+                        className="goal-step-btn"
+                        title="+25%"
+                      >
+                        +25%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateGoalProgress(goal.id, goal.completed ? -100 : 100)}
+                        className={`goal-step-btn ${goal.completed ? 'done-btn' : ''}`}
+                      >
+                        {goal.completed ? 'Reabrir' : '¡Completada! 🥳'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteGoal(goal.id)}
+                        className="goal-delete-btn"
+                        title="Eliminar meta"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </TiltCard>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -411,30 +388,53 @@ export default function Agenda() {
             </button>
           </div>
 
-          <div className="notes-corkboard">
-            {notes.map((note) => {
-              const isNereaAuthor = note.author_name.toLowerCase().includes('nerea');
-              return (
-                <TiltCard maxTilt={10} key={note.id} className="sticky-note-card" style={{ background: note.color }}>
-                  <div className="pin-indicator" style={{ background: note.pin_color }} />
-                  <p className="sticky-note-text">"{note.text}"</p>
-                  <div className="sticky-note-footer">
-                    <span className={`user-badge ${isNereaAuthor ? 'nerea' : 'lucas'}`}>
-                      {isNereaAuthor ? '💜 Nerea' : '🖤 Lucas'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => deleteNote(note.id)}
-                      className="note-delete-btn"
-                      title="Despegar nota"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </TiltCard>
-              );
-            })}
-          </div>
+          {notes.length === 0 ? (
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: 'var(--radius-md)',
+              padding: '3rem 1.5rem',
+              textAlign: 'center',
+              border: '1px dashed var(--color-crema-border)'
+            }}>
+              <span style={{ fontSize: '2.5rem' }}>📌💌</span>
+              <p style={{ marginTop: '0.75rem', color: 'var(--text-body)', fontSize: '1.05rem' }}>
+                Todavía no nos dejamos notitas en la heladera. ¡Sorprendé a tu amor dejándole un mensajito lindo!
+              </p>
+              <button
+                onClick={() => setIsNoteModalOpen(true)}
+                className="continue-site-btn"
+                style={{ marginTop: '1.25rem', padding: '0.65rem 1.25rem' }}
+              >
+                <Plus size={16} />
+                <span>Escribir primera notita</span>
+              </button>
+            </div>
+          ) : (
+            <div className="notes-corkboard">
+              {notes.map((note) => {
+                const isNereaAuthor = note.author_name.toLowerCase().includes('nerea');
+                return (
+                  <TiltCard maxTilt={10} key={note.id} className="sticky-note-card" style={{ background: note.color }}>
+                    <div className="pin-indicator" style={{ background: note.pin_color }} />
+                    <p className="sticky-note-text">"{note.text}"</p>
+                    <div className="sticky-note-footer">
+                      <span className={`user-badge ${isNereaAuthor ? 'nerea' : 'lucas'}`}>
+                        {isNereaAuthor ? '💜 Nerea' : '🖤 Lucas'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => deleteNote(note.id)}
+                        className="note-delete-btn"
+                        title="Despegar nota"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </TiltCard>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
