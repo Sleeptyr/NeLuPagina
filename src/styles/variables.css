@@ -1,0 +1,61 @@
+:root {
+  /* Paleta Pastel Principal: Lila y Crema */
+  --color-lila-50: #FAF5FF;
+  --color-lila-100: #F3E8FF;
+  --color-lila-200: #E9D5FF;
+  --color-lila-300: #D8B4FE;
+  --color-lila-400: #C084FC;
+  --color-lila-500: #A855F7;
+  --color-lila-600: #9333EA;
+  --color-lila-primary: #A277FF;
+  --color-lila-dark: #6B34A8;
+
+  --color-crema-50: #FFFDF9;
+  --color-crema-100: #FAF7F0;
+  --color-crema-200: #F4EEDF;
+  --color-crema-300: #EADEC7;
+  --color-crema-bg: #FAF7F2;
+  --color-crema-card: #FFFFFF;
+  --color-crema-border: #EFE6D8;
+
+  /* Identidad de usuarios */
+  --color-user-nerea: #9B5DE5;
+  --color-user-nerea-bg: #F4EBFC;
+  --color-user-nerea-border: #D8B4FE;
+
+  --color-user-lucas: #1E1B18;
+  --color-user-lucas-bg: #EDE9E3;
+  --color-user-lucas-border: #4A4642;
+
+  /* Acentos románticos y ranitas */
+  --color-heart: #FF5A79;
+  --color-heart-soft: #FFE5EC;
+  --color-mint-frog: #38B000;
+  --color-mint-frog-bg: #EAF7E8;
+  --color-mint-border: #9EF01A;
+
+  /* Textos con contraste accesible */
+  --text-main: #27232A;
+  --text-body: #494350;
+  --text-muted: #797182;
+  --text-light: #A49CAE;
+
+  /* Sombras suaves y etéreas */
+  --shadow-sm: 0 2px 8px rgba(120, 80, 160, 0.05);
+  --shadow-md: 0 8px 24px rgba(120, 80, 160, 0.08);
+  --shadow-lg: 0 16px 36px rgba(120, 80, 160, 0.12);
+  --shadow-polaroid: 0 10px 25px rgba(40, 20, 60, 0.09);
+
+  /* Tipografías */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-handwriting: 'Caveat', cursive;
+
+  /* Espaciado y radios */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --nav-height: 64px;
+}
